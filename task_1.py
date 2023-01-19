@@ -13,7 +13,7 @@ def best_hero(heroes: list):
         if hero in heroes: #Проверяем есть ли герой в искомом списке супергероев
             heroes_dict[hero] = int(elem["powerstats"]["intelligence"]) #Сохраняем героя в наш ранее созданный словарь
     ihero = max(heroes_dict, key=lambda x: heroes_dict[x]) #Получаем героя с максимальным интелектом
-    result = (f"\nСамый умный супергерой: {ihero}) # - его интелект: {heroes_dict[ihero]}")
+    result = (f"\nСамый умный супергерой: {ihero} - его интелект: {heroes_dict[ihero]}")
     return result
 
 list_hero_name = ["Hulk", "Captain America", "Thanos"]

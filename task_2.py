@@ -1,44 +1,43 @@
 import requests
-from pprint import pprint
+import sys
 
 class YaUploader:
-    files_url = "https://cloud-api.yandex.net/v1/disk/resources/files"
-    upload_url = "https://cloud-api.yandex.net/v1/disk/resources/upload"
+    def __init__(self, _token: str):
+        self.upload_url = "https://cloud-api.yandex.net/v1/disk/resources/upload"
+        self.token = _token
 
-
-    def __init__(self, token: str):
-        self.token = token
-
-    @property
-    def headers(self) -> dict:
+    def get_headers(self):
         return {
             "Content-Type": "application/json",
-            "Authorization": f"OAuth {self.token}"
+            "Authorization": f"OAuth {token}"
         }
+    def get_upload_link(self, file_name):
+        params = {"path": file_name, "overwrite": "true"}
+        response = requests.get(self.upload_url, params=params, headers=self.get_headers())
+        if response == 200: #and ... == ...:  # Проверяем запрос, если он не валидный и в вернувшихся данных есть ошибка (данный сервис при 200 может вернуть error), то завершим программу
+            return False  # Возвращаем False
+        return response.json().get("href", "")
 
-    def upload(self, file_path: str):
+
+    def upload(self, files):
         """Метод загружает файлы по списку file_list на яндекс диск"""
-        file_list = ['pic1.jpg', 'pic2.jpg', 'pic3.jpg']
-        for elem in file_list:
-            file_path = elem
-            href = self.get_upload_link(file_path).get("href")
+        for file in files:
+            filename = file.split('/', )[-1]
+            href = self.get_upload_link(filename)
             if not href:
-                return
+                print(
+                    f"При загрузке файла {filename} произошла ошибка. Проверьте корректность данных файла")
+                continue
+            params = {"path": filename, "overwrite": "true"}
 
-            with open(file_path, "rb") as file:
-                response = requests.put(href, data=file)
-                if response.status_code == 201:
-                    print("Файл загружен")
-                    return True
-                print("Файл не загружен потому что", response.status_code)
-                return False
+            response = requests.put(href, data=open(filename, 'rb'))
+            if response.status_code == 200:
+                print(f"При загрузке файла {filename} произошла ошибка. Проверьте корректность данных файла")
+                continue
+            print(f"Файл {filename} загружен успешно")
 
-    def get_upload_link(self, file_path: str) -> dict:
-        params = {"path": file_path, "overwrite": "true"}
-        response = requests.get(self.upload_url, params=params, headers=self.headers)
-        jsonify = response.json()
-        # pprint(jsonify)
-        return jsonify
+
+
 
 def get_token():
     with open("New.txt", "r") as file:
@@ -46,8 +45,7 @@ def get_token():
 
 
 if __name__ == '__main__':
-    # Получить путь к загружаемому файлу и токен от пользователя
-    path_to_file = '.'
+    files = ['pic1.jpg', 'pic2.jpg', 'pic3.jpg']
     token = get_token()
     uploader = YaUploader(token)
-    result = uploader.upload(path_to_file)
+    result = uploader.upload(files)
